@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR File Tracker - Subir Archivos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .upload-section {
+            border: 3px dashed #ddd;
+            border-radius: 15px;
+            padding: 60px 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-section:hover,
+        .upload-section.dragover {
+            border-color: #667eea;
+            background: #f8f9ff;
+            transform: scale(1.02);
+        }
+
+        .upload-section.dragover::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(102, 126, 234, 0.1);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.1; }
+            50% { opacity: 0.3; }
+        }
+
+        .upload-icon {
+            font-size: 4em;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .upload-subtext {
+            color: #666;
+            font-size: 1em;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            margin: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .progress-container {
+            width: 100%;
+            background: #f0f0f0;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress-bar {
+            height: 20px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+
+        .file-list {
+            margin-top: 20px;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin: 8px 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .file-info {
+            flex-grow: 1;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 3px;
+        }
+
+        .file-size {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .result-section {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+            display: none;
+            text-align: center;
+        }
+
+        .qr-container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            display: inline-block;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .qr-code {
+            max-width: 300px;
+            height: auto;
+            border-radius: 10px;
+        }
+
+        .share-url {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #ddd;
+            margin: 15px 0;
+            font-family: monospace;
+            word-break: break-all;
+            font-size: 0.9em;
+        }
+
+        .action-buttons {
+            margin-top: 20px;
+        }
+
+        .copy-btn {
+            background: #28a745;
+        }
+
+        .download-btn {
+            background: #17a2b8;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.success {
+            background: #28a745;
+        }
+
+        .notification.error {
+            background: #dc3545;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .nav-links {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .nav-link {
+            color: #667eea;
+            text-decoration: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .nav-link:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .stats-preview {
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 0;
+                border-radius: 0;
+                min-height: 100vh;
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .upload-section {
+                padding: 40px 15px;
+            }
+
+            .btn {
+                padding: 12px 25px;
+                font-size: 1em;
+            }
+
+            .file-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📤 QR File Tracker</h1>
+            <p>Sube archivos, genera QR y haz seguimiento de accesos</p>
+        </div>
+
+        <div class="nav-links">
+            <a href="/index.html" class="nav-link">📤 Subir Archivos</a>
+            <a href="/dashboard.html" class="nav-link">📊 Dashboard</a>
+        </div>
+
+        <div class="upload-section" id="uploadSection">
+            <div class="upload-icon">📁</div>
+            <div class="upload-text">Arrastra archivos aquí o haz clic para seleccionar</div>
+            <div class="upload-subtext">Soporta cualquier tipo de archivo • Máximo 50MB por archivo</div>
+            
+            <input type="file" id="fileInput" class="file-input" multiple>
+            
+            <div style="margin-top: 20px;">
+                <button class="btn" onclick="document.getElementById('fileInput').click()">
+                    📁 Seleccionar Archivos
+                </button>
+            </div>
+        </div>
+
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div class="file-list" id="fileList"></div>
+
+        <div class="result-section" id="resultSection">
+            <h3>✅ ¡Archivos subidos exitosamente!</h3>
+            
+            <div class="qr-container">
+                <img id="qrCode" class="qr-code" src="" alt="Código QR">
+            </div>
+            
+            <div class="share-url" id="shareUrl"></div>
+            
+            <div class="action-buttons">
+                <button class="btn copy-btn" onclick="copyShareUrl()">
+                    📋 Copiar Enlace
+                </button>
+                <button class="btn download-btn" id="downloadQrBtn">
+                    💾 Descargar QR
+                </button>
+                <button class="btn" onclick="location.reload()">
+                    🔄 Subir Más Archivos
+                </button>
+            </div>
+
+            <div class="stats-preview">
+                <p>💡 <strong>Consejo:</strong> Tu QR no caduca y puedes ver las estadísticas en el <a href="/dashboard.html">Dashboard</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let uploadData = null;
+        
+        // Referencias DOM
+        const uploadSection = document.getElementById('uploadSection');
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const resultSection = document.getElementById('resultSection');
+        const qrCode = document.getElementById('qrCode');
+        const shareUrl = document.getElementById('shareUrl');
+        const downloadQrBtn = document.getElementById('downloadQrBtn');
+
+        // Event listeners para drag & drop
+        uploadSection.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadSection.classList.add('dragover');
+        });
+
+        uploadSection.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            uploadSection.classList.remove('dragover');
+        });
+
+        uploadSection.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadSection.classList.remove('dragover');
+            const files = Array.from(e.dataTransfer.files);
+            handleFiles(files);
+        });
+
+        uploadSection.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            handleFiles(files);
+        });
+
+        function handleFiles(files) {
+            if (files.length === 0) return;
+
+            displayFileList(files);
+            uploadFiles(files);
+        }
+
+        function displayFileList(files) {
+            fileList.innerHTML = '';
+            files.forEach(file => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                
+                const fileSize = (file.size / 1024 / 1024).toFixed(2);
+                
+                fileItem.innerHTML = `
+                    <div class="file-info">
+                        <div class="file-name">📄 ${file.name}</div>
+                        <div class="file-size">${fileSize} MB</div>
+                    </div>
+                `;
+                
+                fileList.appendChild(fileItem);
+            });
+        }
+
+        async function uploadFiles(files) {
+            const formData = new FormData();
+            
+            files.forEach(file => {
+                formData.append('files', file);
+            });
+
+            try {
+                // Mostrar progress bar
+                progressContainer.style.display = 'block';
+                progressBar.style.width = '0%';
+
+                // Simular progreso
+                let progress = 0;
+                const progressInterval = setInterval(() => {
+                    progress += Math.random() * 30;
+                    if (progress > 90) progress = 90;
+                    progressBar.style.width = progress + '%';
+                }, 200);
+
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                clearInterval(progressInterval);
+                progressBar.style.width = '100%';
+
+                if (!response.ok) {
+                    throw new Error('Error en la subida');
+                }
+
+                const data = await response.json();
+                uploadData = data;
+                
+                // Mostrar resultado
+                setTimeout(() => {
+                    showResult(data);
+                }, 500);
+
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Error subiendo archivos', 'error');
+                progressContainer.style.display = 'none';
+            }
+        }
+
+        function showResult(data) {
+            progressContainer.style.display = 'none';
+            
+            qrCode.src = data.qrCode;
+            shareUrl.textContent = data.shareUrl;
+            downloadQrBtn.onclick = () => downloadQR(data.uploadId);
+            
+            resultSection.style.display = 'block';
+            resultSection.scrollIntoView({ behavior: 'smooth' });
+            
+            showNotification('¡Archivos subidos exitosamente!', 'success');
+        }
+
+        function copyShareUrl() {
+            navigator.clipboard.writeText(shareUrl.textContent).then(() => {
+                showNotification('¡Enlace copiado al portapapeles!', 'success');
+            }).catch(() => {
+                // Fallback para navegadores que no soportan clipboard API
+                const textArea = document.createElement('textarea');
+                textArea.value = shareUrl.textContent;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showNotification('¡Enlace copiado!', 'success');
+            });
+        }
+
+        function downloadQR(uploadId) {
+            const link = document.createElement('a');
+            link.href = `/api/qr/${uploadId}`;
+            link.download = `qr-${uploadId}.png`;
+            link.click();
+            showNotification('Descargando código QR...', 'success');
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // Prevenir comportamiento por defecto del drag & drop en toda la página
+        document.addEventListener('dragover', (e) => e.preventDefault());
+        document.addEventListener('drop', (e) => e.preventDefault());
+    </script>
+</body>
+</html>
