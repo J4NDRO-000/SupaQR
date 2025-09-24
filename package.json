@@ -1,0 +1,37 @@
+{
+  "name": "qr-file-tracker",
+  "version": "1.0.0",
+  "description": "Aplicación web para subir archivos, generar QR y hacer tracking de accesos",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "init-db": "node scripts/init-db.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1",
+    "qrcode": "^1.5.3",
+    "ua-parser-js": "^1.0.37",
+    "sqlite3": "^5.1.6",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "express-rate-limit": "^7.1.5",
+    "archiver": "^6.0.1",
+    "mime-types": "^2.1.35",
+    "geoip-lite": "^1.4.10",
+    "uuid": "^9.0.1",
+    "sharp": "^0.33.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "keywords": [
+    "qr",
+    "file-upload",
+    "tracking",
+    "analytics"
+  ],
+  "author": "Tu Nombre",
+  "license": "MIT"
+}
